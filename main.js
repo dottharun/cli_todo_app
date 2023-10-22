@@ -37,19 +37,41 @@ const logAppVersion = () => {
 //   db funcs
 const insertItem = async (todoItem) => {
   await client.connect();
-  console.log(`client connected`);
 
   try {
     const res = await client.query(
       `INSERT INTO todos (todo, status) VALUES ($1, $2);`,
       [todoItem, "pending"]
     );
-    console.log(`added the todo - ${todoItem}`);
+    console.log(`added the todo - "${todoItem}"`);
   } catch (e) {
     console.log("db insertion error", e);
   } finally {
     await client.end();
   }
+};
+
+const logTodosAccToFormat = async (opt) => {
+  await client.connect();
+  console.log(`client connected`);
+
+  let res = null;
+
+  try {
+    if (opt === "all") {
+      res = await client.query(`SELECT * FROM todos;`);
+    } else {
+      res = await client.query(`SELECT * FROM todos WHERE status = $1;`, [opt]);
+    }
+
+    console.log(`list query completed`);
+  } catch (e) {
+    console.log("db read error: ", e);
+  } finally {
+    await client.end();
+  }
+
+  console.table(res.rows);
 };
 
 const init = async () => {
@@ -61,8 +83,8 @@ const init = async () => {
       await insertItem(argv[1]);
       break;
     case "--list":
+      assert(["all", "pending", "done"].includes(argv[1]));
       console.log(`listing todos acc to format - ${argv[1]}`);
-      //may need to check for format
       logTodosAccToFormat(argv[1]);
       break;
     case "--done":
