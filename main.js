@@ -43,18 +43,17 @@ const insertItem = async (todoItem) => {
       `INSERT INTO todos (todo, status) VALUES ($1, $2);`,
       [todoItem, "pending"]
     );
-    console.log(`added the todo - "${todoItem}"`);
   } catch (e) {
     console.log("db insertion error", e);
   } finally {
     await client.end();
   }
+
+  console.log(`added the todo - "${todoItem}"`);
 };
 
 const logTodosAccToFormat = async (opt) => {
   await client.connect();
-  console.log(`client connected`);
-
   let res = null;
 
   try {
@@ -63,8 +62,6 @@ const logTodosAccToFormat = async (opt) => {
     } else {
       res = await client.query(`SELECT * FROM todos WHERE status = $1;`, [opt]);
     }
-
-    console.log(`list query completed`);
   } catch (e) {
     console.log("db read error: ", e);
   } finally {
@@ -72,6 +69,37 @@ const logTodosAccToFormat = async (opt) => {
   }
 
   console.table(res.rows);
+};
+
+const updateTodoAsDone = async (id) => {
+  await client.connect();
+
+  try {
+    const res = await client.query(
+      `UPDATE todos SET status = $1 WHERE id = $2;`,
+      ["done", id]
+    );
+  } catch (e) {
+    console.log("db updating error: ", e);
+  } finally {
+    await client.end();
+  }
+
+  console.log(`modified the todo with id: "${id}" as done`);
+};
+
+const deleteTodo = async (id) => {
+  await client.connect();
+
+  try {
+    const res = await client.query(`DELETE FROM todos WHERE id = $1`, [id]);
+  } catch (e) {
+    console.log("db row deleting error: ", e);
+  } finally {
+    await client.end();
+  }
+
+  console.log(`deleted the todo with id: ${id}`);
 };
 
 const init = async () => {
